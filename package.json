@@ -42,7 +42,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "zip": "node scripts/zip-dist.mjs"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.0",
