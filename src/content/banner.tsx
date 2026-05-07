@@ -9,6 +9,8 @@ function mount() {
 
   const host = document.createElement('div');
   host.id = HOST_ID;
+  // Inline `all: initial` would have higher specificity than the `:host { font-family }`
+  // rule in banner.css and wipe the GitHub font stack — set font properties inline too.
   host.style.all = 'initial';
   host.style.position = 'fixed';
   host.style.top = '0';
@@ -16,6 +18,11 @@ function mount() {
   host.style.width = '0';
   host.style.height = '0';
   host.style.zIndex = '2147483647';
+  host.style.fontFamily =
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"';
+  host.style.fontSize = '14px';
+  host.style.lineHeight = '20px';
+  host.style.color = '#1f2328';
 
   const target = document.documentElement || document.body;
   target.appendChild(host);
