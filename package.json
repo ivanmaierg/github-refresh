@@ -43,7 +43,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "icons": "node scripts/generate-icons.mjs",
-    "zip": "node scripts/zip-dist.mjs"
+    "zip": "node scripts/zip-dist.mjs",
+    "screenshots": "node scripts/format-screenshots.mjs"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.0",
@@ -81,6 +82,9 @@
   },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "sharp"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   }
 }
