@@ -247,6 +247,14 @@ If you're filing an issue, please include:
 
 ---
 
+## Releases
+
+Every version's changes are tracked in [`CHANGELOG.md`](CHANGELOG.md). Prebuilt zips are attached to each [GitHub Release](https://github.com/ivanmaierg/github-refresh/releases).
+
+For maintainers shipping a new version: see [`RELEASING.md`](RELEASING.md). The flow is `pnpm release:patch` → `git push --follow-tags` → GitHub Actions does the rest.
+
+---
+
 ## License
 
 [MIT](LICENSE) © ivanmaierg

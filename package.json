@@ -44,7 +44,10 @@
     "format": "prettier --write .",
     "icons": "node scripts/generate-icons.mjs",
     "zip": "node scripts/zip-dist.mjs",
-    "screenshots": "node scripts/format-screenshots.mjs"
+    "screenshots": "node scripts/format-screenshots.mjs",
+    "release:patch": "pnpm version patch -m \"chore: release v%s\"",
+    "release:minor": "pnpm version minor -m \"chore: release v%s\"",
+    "release:major": "pnpm version major -m \"chore: release v%s\""
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.0",

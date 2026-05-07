@@ -58,6 +58,14 @@ Open an issue with:
 - Expected vs. actual behavior
 - Screenshots if visual
 
+## Changelog
+
+User-visible changes go in [`CHANGELOG.md`](CHANGELOG.md) under the `## [Unreleased]` section. Use the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) categories: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Internal-only changes (refactors, CI tweaks, doc fixes) don't need an entry.
+
+## Releasing
+
+See [`RELEASING.md`](RELEASING.md) — `pnpm release:patch|minor|major` then `git push --follow-tags` triggers the Release workflow.
+
 ## License
 
 By contributing, you agree your contributions will be MIT-licensed.

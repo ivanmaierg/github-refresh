@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, zip, and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate icons
+        run: pnpm icons
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Zip
+        run: pnpm zip
+
+      - name: Verify version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Pull out the section between "## [<version>]" and the next "## [" heading.
+          NOTES=$(awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { flag = 1; next }
+            flag && /^## \[/ { exit }
+            flag && /^\[.*\]:/ { exit }
+            flag { print }
+          ' CHANGELOG.md)
+          # Trim trailing blank lines
+          NOTES=$(printf '%s\n' "$NOTES" | sed -e :a -e '/^$/{$d;N;ba' -e '}')
+          if [ -z "$NOTES" ]; then
+            echo "::warning::No CHANGELOG entry found for v$VERSION — falling back to auto-generated notes"
+            NOTES="_No changelog entry for this version. See the commit list below._"
+          fi
+          {
+            echo "notes<<__EOF__"
+            echo "$NOTES"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: releases/github-refresh-v*.zip
+          generate_release_notes: true
+          name: ${{ github.ref_name }}
+          body: |
+            ## Install
+
+            **From the Chrome Web Store:** see [README → Install](https://github.com/ivanmaierg/github-refresh#install).
+
+            **Side-load the prebuilt zip:**
+            1. Download `github-refresh-${{ github.ref_name }}.zip` (asset below).
+            2. Unzip.
+            3. `chrome://extensions` → Developer mode on → Load unpacked → select the unzipped folder.
+
+            **From source at this tag:** `git checkout ${{ github.ref_name }} && pnpm install && pnpm build`, then load `dist/` as an unpacked extension.
+
+            ---
+
+            ## What's changed
+
+            ${{ steps.changelog.outputs.notes }}
