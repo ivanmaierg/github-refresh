@@ -1,0 +1,85 @@
+{
+  "name": "github-refresh",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Chrome extension that auto-refreshes idle GitHub tabs and reminds you to refresh active ones — never miss new commits, PR comments, or CI status again.",
+  "keywords": [
+    "chrome-extension",
+    "browser-extension",
+    "github",
+    "auto-refresh",
+    "tab-refresh",
+    "productivity",
+    "developer-tools",
+    "manifest-v3",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "shadcn-ui",
+    "vite",
+    "crxjs",
+    "pull-requests",
+    "code-review",
+    "ci-cd",
+    "github-actions",
+    "primer-design"
+  ],
+  "homepage": "https://github.com/ivanmaierg/github-refresh#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanmaierg/github-refresh.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ivanmaierg/github-refresh/issues"
+  },
+  "author": "ivanmaierg",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.456.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@eslint/js": "^9.14.0",
+    "@types/chrome": "^0.0.283",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.14.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.12.0",
+    "postcss": "^8.4.49",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0",
+    "vite": "^5.4.10"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp"]
+  }
+}
