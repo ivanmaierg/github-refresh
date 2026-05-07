@@ -1,5 +1,6 @@
 # GitHub Auto-Refresh
 
+
 > A free, open-source Chrome extension that auto-refreshes idle GitHub tabs and gently nudges you when an active tab is going stale. Stop hammering Cmd+R to check for new commits, PR comments, review requests, or CI runs — let your browser do it.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -12,6 +13,9 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 A productivity browser extension for developers who live in GitHub. Built with **React 18, TypeScript, Tailwind CSS, and shadcn/ui**, themed to match GitHub's Primer design system in both light and dark mode.
+
+<img width="371" height="601" alt="image" src="https://github.com/user-attachments/assets/ca09b295-ce78-4bfc-b3e8-1b79a55be58d" />
+
 
 ---
 
