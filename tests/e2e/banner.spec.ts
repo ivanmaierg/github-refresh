@@ -41,10 +41,10 @@ test.describe('banner injection via mocked github.com', () => {
     const banner = page.locator('[role="status"]');
     await expect(banner).toBeVisible({ timeout: 3_000 });
 
-    // Take screenshot BEFORE clicking anything — baseline for font/style regression
-    // NOTE: On macOS this generates a *-darwin.png snapshot locally.
-    // CI (Linux) will generate the *-linux.png variant on first run and commit it.
-    // See tests/README.md for the snapshot workflow.
+    // Visual regression guard for the banner font/style. The Linux baseline at
+    // tests/e2e/banner.spec.ts-snapshots/reminder-banner-chromium-linux.png is the
+    // committed source of truth; macOS *-darwin.png variants are local-only and
+    // gitignored. To regenerate the Linux baseline, see tests/README.md (Docker recipe).
     await expect(banner).toHaveScreenshot('reminder-banner.png', {
       maxDiffPixelRatio: 0.01,
     });

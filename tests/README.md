@@ -45,18 +45,38 @@ The banner E2E test uses `toHaveScreenshot()` to guard against visual regression
 
 Playwright names snapshots per OS: `*-linux.png`, `*-darwin.png`, `*-win32.png`.
 
-**Convention**: only `*-linux.png` snapshots are committed (CI runs on `ubuntu-latest`).
-macOS and Windows variants are gitignored.
+**The Linux baseline is canonical and committed** at
+`tests/e2e/banner.spec.ts-snapshots/reminder-banner-chromium-linux.png`.
+CI verifies against it — CI does **not** auto-generate it. A missing or stale baseline
+causes CI to go red immediately.
 
-To update snapshots locally (macOS generates `*-darwin.png`):
+macOS-local snapshots (`*-darwin.png`) are gitignored and regenerated on every local
+`pnpm test:e2e` run. They are **not** the source of truth; they only exist so local runs
+pass on macOS.
+
+### Regenerating the Linux baseline
+
+When banner styling changes (fonts, colours, layout), macOS and Windows contributors must
+regenerate the Linux PNG using the official Playwright Docker image so the OS matches CI:
 
 ```bash
-E2E_SKIP_BUILD=1 pnpm exec playwright test --update-snapshots
+PW_VERSION=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies."@playwright/test".version')
+docker run --rm \
+  -v "$PWD:/work" -w /work \
+  -e CI=1 \
+  "mcr.microsoft.com/playwright:v${PW_VERSION}-jammy" \
+  bash -c "corepack enable && pnpm install --frozen-lockfile && pnpm exec playwright test --update-snapshots tests/e2e/banner.spec.ts"
 ```
 
-When adding a new `toHaveScreenshot()` call, run with `--update-snapshots` once to generate
-the baseline, then commit the resulting file. CI will generate its own `*-linux.png` on the
-first green run — check the CI artifact if needed and commit it.
+If `jq` is not installed, look up the version in `package.json` under
+`devDependencies["@playwright/test"]` and substitute it directly in the image tag
+(e.g. `mcr.microsoft.com/playwright:v1.52.0-jammy`).
+
+> **Note**: the Docker recipe mounts the repo root as `/work`, so pnpm's store ends up at
+> `.pnpm-store/` inside the repo. That directory is gitignored and safe to delete afterwards.
+
+After the container finishes, commit the updated
+`tests/e2e/banner.spec.ts-snapshots/reminder-banner-chromium-linux.png`.
 
 ## CI
 

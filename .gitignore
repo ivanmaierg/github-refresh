@@ -42,6 +42,7 @@ lerna-debug.log*
 playwright-report/
 test-results/
 playwright/.cache
+.pnpm-store/
 
 # OS-specific Playwright snapshots — only *-linux.png is committed (CI canonical)
 tests/e2e/**/*-darwin.png
