@@ -56,4 +56,53 @@ test.describe('banner injection via mocked github.com', () => {
     await page.getByRole('button', { name: 'Dismiss' }).click();
     await expect(banner).not.toBeVisible({ timeout: 2_000 });
   });
+
+  test('Refresh now button triggers a real tab reload via SW handler', async ({
+    page,
+    serviceWorker,
+  }) => {
+    await page.route('https://github.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: STUB }),
+    );
+
+    await page.goto('https://github.com/ivanmaierg/github-refresh');
+    await page.locator('#gh-refresh-banner-host').waitFor({ state: 'attached', timeout: 5_000 });
+
+    // Stamp a sentinel on `window` so we can prove the page actually reloaded
+    // (a fresh document means our sentinel is gone).
+    await page.evaluate(() => {
+      (window as unknown as { __ghRefreshTestSentinel?: boolean }).__ghRefreshTestSentinel = true;
+    });
+
+    const tabId = await serviceWorker.evaluate(async () => {
+      const tabs = await chrome.tabs.query({ active: true });
+      return tabs[0]?.id ?? null;
+    });
+    expect(tabId).not.toBeNull();
+
+    await serviceWorker.evaluate(
+      async ({ tabId, minutes }: { tabId: number; minutes: number }) => {
+        await chrome.tabs.sendMessage(tabId, { type: 'show-banner', minutes });
+      },
+      { tabId: tabId as number, minutes: 7 },
+    );
+
+    const refreshButton = page.getByRole('button', { name: /refresh now/i });
+    await expect(refreshButton).toBeVisible({ timeout: 3_000 });
+
+    // Click the banner's Refresh — content script sends `refresh-now` with sender.tab populated,
+    // SW calls chrome.tabs.reload(senderTabId), and the page navigates fresh.
+    const reloadComplete = page.waitForEvent('load', { timeout: 5_000 });
+    await refreshButton.click();
+    await reloadComplete;
+
+    // Sentinel is gone → this is a fresh document, not the same one we stamped.
+    const sentinelSurvivedReload = await page.evaluate(() =>
+      Boolean((window as unknown as { __ghRefreshTestSentinel?: boolean }).__ghRefreshTestSentinel),
+    );
+    expect(sentinelSurvivedReload).toBe(false);
+
+    // Content script should re-attach on the reloaded document.
+    await page.locator('#gh-refresh-banner-host').waitFor({ state: 'attached', timeout: 5_000 });
+  });
 });

@@ -21,19 +21,19 @@ test('prefs-updated message returns { ok: true }', async ({ context, extensionId
   await page.close();
 });
 
-test('refresh-now message from popup context returns { ok: true }', async ({
+test('refresh-now from a sender without sender.tab is a no-op but still acks', async ({
   openPopup,
 }) => {
-  // Open the popup — it has chrome.runtime available and can sendMessage to the SW
+  // Sender without `sender.tab.id` (the popup) → handler must NOT reload anything
+  // but must still respond { ok: true } so the caller never hangs.
+  // The full reload path (banner click → SW reloads tab) lives in banner.spec.ts.
   const popupPage = await openPopup();
   await expect(popupPage.getByRole('heading', { name: 'GitHub Auto-Refresh' })).toBeVisible();
 
-  // Send refresh-now from the popup context (which has chrome.runtime access)
   const response = await popupPage.evaluate(async () => {
     return chrome.runtime.sendMessage({ type: 'refresh-now' });
   });
 
-  // SW's refresh-now handler returns { ok: true } (no tab to reload when sent from popup)
   expect(response).toEqual({ ok: true });
   await popupPage.close();
 });
