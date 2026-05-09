@@ -2,8 +2,10 @@ import { test as base, chromium, type BrowserContext, type Worker } from '@playw
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = resolve(__dirname, '../../../dist');
 const SKIP_BUILD = process.env.E2E_SKIP_BUILD === '1';
 const HEADLESS = process.env.E2E_HEADED !== '1';
