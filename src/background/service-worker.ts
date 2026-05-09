@@ -312,3 +312,8 @@ async function fireNotification(tabId: number, minutes: number): Promise<void> {
     priority: 0,
   });
 }
+
+// Test hook — lets E2E drive tick() deterministically without waiting on chrome.alarms
+// (minimum 1-minute period). Inert in production: the SW global is only reachable from
+// extension-internal code, never from web pages.
+(globalThis as unknown as { __test_tick?: () => Promise<void> }).__test_tick = tick;
