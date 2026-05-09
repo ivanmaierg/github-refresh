@@ -26,7 +26,7 @@ export default tseslint.config(
   {
     // Test files: relax React-specific rules that don't apply in Playwright/Vitest context.
     // Playwright fixtures use a `use` callback that triggers react-hooks/rules-of-hooks.
-    files: ['tests/**/*.{ts,tsx}'],
+    files: ['tests/e2e/fixtures/**/*.ts'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
       'react-refresh/only-export-components': 'off',
