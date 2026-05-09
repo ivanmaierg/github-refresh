@@ -1,11 +1,16 @@
 import { test, expect } from './fixtures/extension';
 
 test('alarm gh-refresh-tick exists after SW initialises', async ({ serviceWorker }) => {
-  const alarm = await serviceWorker.evaluate(async () => {
-    return chrome.alarms.get('gh-refresh-tick');
-  });
-  expect(alarm).not.toBeNull();
-  expect(alarm).toHaveProperty('name', 'gh-refresh-tick');
+  await expect
+    .poll(
+      async () =>
+        serviceWorker.evaluate(async () => {
+          const a = await chrome.alarms.get('gh-refresh-tick');
+          return a?.name ?? null;
+        }),
+      { timeout: 5_000, message: 'gh-refresh-tick alarm should be registered after SW init' },
+    )
+    .toBe('gh-refresh-tick');
 });
 
 test('prefs-updated message returns { ok: true }', async ({ context, extensionId }) => {
