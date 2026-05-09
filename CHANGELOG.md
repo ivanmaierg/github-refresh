@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-09
+
 ### Added
 - Add Playwright E2E and Vitest unit test harnesses.
 
@@ -26,5 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Release workflow: tag `v*` triggers a build, version-vs-tag check, zip, and GitHub Release with changelog notes.
 - Chrome Web Store submission package (listing copy, permission justifications, privacy policy, screenshot formatter).
 
-[Unreleased]: https://github.com/ivanmaierg/github-refresh/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ivanmaierg/github-refresh/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ivanmaierg/github-refresh/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ivanmaierg/github-refresh/releases/tag/v0.1.0
