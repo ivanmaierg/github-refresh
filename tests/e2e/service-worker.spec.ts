@@ -1,0 +1,39 @@
+import { test, expect } from './fixtures/extension';
+
+test('alarm gh-refresh-tick exists after SW initialises', async ({ serviceWorker }) => {
+  const alarm = await serviceWorker.evaluate(async () => {
+    return chrome.alarms.get('gh-refresh-tick');
+  });
+  expect(alarm).not.toBeNull();
+  expect(alarm).toHaveProperty('name', 'gh-refresh-tick');
+});
+
+test('prefs-updated message returns { ok: true }', async ({ context, extensionId }) => {
+  const page = await context.newPage();
+  // Navigate to a non-extension page so we can send runtime messages
+  await page.goto(`chrome-extension://${extensionId}/src/popup/index.html`);
+
+  const response = await page.evaluate(async () => {
+    return chrome.runtime.sendMessage({ type: 'prefs-updated' });
+  });
+
+  expect(response).toEqual({ ok: true });
+  await page.close();
+});
+
+test('refresh-now message from popup context returns { ok: true }', async ({
+  openPopup,
+}) => {
+  // Open the popup — it has chrome.runtime available and can sendMessage to the SW
+  const popupPage = await openPopup();
+  await expect(popupPage.getByRole('heading', { name: 'GitHub Auto-Refresh' })).toBeVisible();
+
+  // Send refresh-now from the popup context (which has chrome.runtime access)
+  const response = await popupPage.evaluate(async () => {
+    return chrome.runtime.sendMessage({ type: 'refresh-now' });
+  });
+
+  // SW's refresh-now handler returns { ok: true } (no tab to reload when sent from popup)
+  expect(response).toEqual({ ok: true });
+  await popupPage.close();
+});

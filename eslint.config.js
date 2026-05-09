@@ -23,4 +23,13 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
+  {
+    // Test files: relax React-specific rules that don't apply in Playwright/Vitest context.
+    // Playwright fixtures use a `use` callback that triggers react-hooks/rules-of-hooks.
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 );
