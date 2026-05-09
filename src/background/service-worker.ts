@@ -9,17 +9,30 @@ import {
   patchTabState,
   setTabState,
 } from '@/lib/storage';
-
-const MIN = 60_000;
+import { decideRefresh, decideRemind } from './scheduler';
 const NOTIFICATION_PREFIX = 'gh-refresh-remind:';
 
+const log = (...args: unknown[]) => console.log('[gh-refresh]', ...args);
+
+async function ensureAlarm(): Promise<void> {
+  const existing = await chrome.alarms.get(ALARM_TICK);
+  if (!existing) {
+    await chrome.alarms.create(ALARM_TICK, { periodInMinutes: 1, delayInMinutes: 1 });
+    log('alarm created');
+  } else {
+    log('alarm already scheduled', existing);
+  }
+}
+
+void ensureAlarm();
+
 chrome.runtime.onInstalled.addListener(() => {
-  void chrome.alarms.create(ALARM_TICK, { periodInMinutes: 0.5, delayInMinutes: 0.5 });
+  void ensureAlarm();
   void seedExistingTabs();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  void chrome.alarms.create(ALARM_TICK, { periodInMinutes: 0.5, delayInMinutes: 0.5 });
+  void ensureAlarm();
   void seedExistingTabs();
 });
 
@@ -60,6 +73,7 @@ if (chrome.webNavigation?.onHistoryStateUpdated) {
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
+  log('alarm fired', alarm.name);
   if (alarm.name === ALARM_TICK) void tick();
 });
 
@@ -121,6 +135,7 @@ async function seedExistingTabs(): Promise<void> {
 
 async function onTabActivated(tabId: number, windowId: number): Promise<void> {
   const now = Date.now();
+  log('activated', tabId, 'window', windowId);
 
   const tabsInWindow = await chrome.tabs.query({ windowId });
   for (const t of tabsInWindow) {
@@ -165,6 +180,7 @@ async function onWindowFocused(windowId: number): Promise<void> {
 
 async function markAllUnfocused(): Promise<void> {
   const now = Date.now();
+  log('window blur — marking all unfocused');
   const all = await getAllTabStates();
   for (const [id, state] of all) {
     if (state.lastUnfocusedAt === null) {
@@ -177,6 +193,7 @@ async function onTabReloaded(tabId: number, url: string): Promise<void> {
   const now = Date.now();
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   const isActive = !!tab?.active;
+  log('reloaded', tabId, url);
   await setTabState(tabId, {
     url,
     lastUnfocusedAt: isActive ? null : now,
@@ -189,10 +206,13 @@ async function onTabReloaded(tabId: number, url: string): Promise<void> {
 
 async function tick(): Promise<void> {
   const prefs = await getPrefs();
+  log('tick start', {
+    enabled: prefs.enabled,
+    refreshMin: prefs.refreshThresholdMin,
+    remindMin: prefs.remindThresholdMin,
+  });
   if (!prefs.enabled) return;
 
-  const refreshMs = prefs.refreshThresholdMin * MIN;
-  const remindMs = prefs.remindThresholdMin * MIN;
   const now = Date.now();
 
   const liveTabs = await chrome.tabs.query({});
@@ -211,6 +231,7 @@ async function tick(): Promise<void> {
     if (!matchesAny(tab.url, prefs.patterns)) continue;
 
     let state = await getTabState(tab.id);
+    log('tab', tab.id, { active: tab.active, url: tab.url, state });
     if (!state) {
       state = {
         url: tab.url,
@@ -220,14 +241,21 @@ async function tick(): Promise<void> {
         bannerDismissedAt: null,
       };
       await setTabState(tab.id, state);
+      log('tab', tab.id, 'seeded fresh state');
       continue;
     }
 
-    if (
-      !tab.active &&
-      state.lastUnfocusedAt !== null &&
-      now - state.lastUnfocusedAt >= refreshMs
-    ) {
+    const isActive = !!tab.active;
+    const refresh = decideRefresh({ prefs, state, isActive, now });
+
+    if (refresh.kind === 'refresh') {
+      log(
+        'reloading',
+        tab.id,
+        'idle for',
+        Math.round((now - (state.lastUnfocusedAt ?? now)) / 1000),
+        's',
+      );
       try {
         await chrome.tabs.reload(tab.id);
       } catch {
@@ -244,22 +272,21 @@ async function tick(): Promise<void> {
       await setTabState(tab.id, state);
       await chrome.notifications.clear(`${NOTIFICATION_PREFIX}${tab.id}`);
       continue;
+    } else {
+      log('tab', tab.id, 'skip refresh:', refresh.reason);
     }
 
-    if (tab.active && now - state.lastReloadedAt >= remindMs) {
-      const lastRemind = state.lastRemindedAt ?? 0;
-      const dismissedRecently =
-        state.bannerDismissedAt !== null && state.bannerDismissedAt > state.lastReloadedAt;
-      if (!dismissedRecently && now - lastRemind >= remindMs) {
-        const minutes = Math.round((now - state.lastReloadedAt) / MIN);
-        try {
-          await chrome.tabs.sendMessage(tab.id, { type: 'show-banner', minutes });
-        } catch {
-          // Content script not ready yet (e.g., tab loading); skip silently.
-        }
-        if (prefs.notificationsEnabled) await fireNotification(tab.id, minutes);
-        await patchTabState(tab.id, { lastRemindedAt: now });
+    const remind = decideRemind({ prefs, state, isActive, now });
+    if (remind.kind === 'remind') {
+      try {
+        await chrome.tabs.sendMessage(tab.id, { type: 'show-banner', minutes: remind.minutes });
+      } catch {
+        // Content script not ready yet (e.g., tab loading); skip silently.
       }
+      if (prefs.notificationsEnabled) await fireNotification(tab.id, remind.minutes);
+      await patchTabState(tab.id, { lastRemindedAt: now });
+    } else {
+      log('tab', tab.id, 'skip remind:', remind.reason);
     }
   }
 }
