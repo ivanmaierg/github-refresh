@@ -49,8 +49,11 @@ export const test = base.extend<Fixtures>({
     });
 
     await use(context);
-    await context.close();
-    rmSync(userDataDir, { recursive: true, force: true });
+    try {
+      await context.close();
+    } finally {
+      rmSync(userDataDir, { recursive: true, force: true });
+    }
   },
 
   serviceWorker: async ({ context }, use) => {
