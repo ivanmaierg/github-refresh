@@ -93,15 +93,13 @@ describe('decideRefresh', () => {
     expect(result).toEqual({ kind: 'refresh' });
   });
 
-  it('skips when idle equals threshold exactly (not >=)', () => {
+  it('refreshes when idle equals threshold exactly (>= boundary)', () => {
     const result = decideRefresh({
       prefs: makeRefreshPrefs({ refreshThresholdMin: 5 }),
       state: makeRefreshState({ lastUnfocusedAt: NOW - 5 * MIN_MS }), // exactly 5 min
       isActive: false,
       now: NOW,
     });
-    // idleMs === refreshThresholdMin * MIN_MS means idleMs < threshold is false
-    // so it should refresh
     expect(result).toEqual({ kind: 'refresh' });
   });
 });
