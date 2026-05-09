@@ -60,23 +60,42 @@ When banner styling changes (fonts, colours, layout), macOS and Windows contribu
 regenerate the Linux PNG using the official Playwright Docker image so the OS matches CI:
 
 ```bash
-PW_VERSION=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies."@playwright/test".version')
+# Read the exact Playwright version from package.json (no jq required, no pnpm-list flake)
+PW_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test'].replace(/^\D+/, '')")
+
 docker run --rm \
+  --ipc=host \
   -v "$PWD:/work" -w /work \
   -e CI=1 \
   "mcr.microsoft.com/playwright:v${PW_VERSION}-jammy" \
   bash -c "corepack enable && pnpm install --frozen-lockfile && pnpm exec playwright test --update-snapshots tests/e2e/banner.spec.ts"
+
+# After the container exits, your host node_modules/ now has Linux-only platform binaries.
+# Restore your local install before running anything else (build, dev, tests):
+rm -rf node_modules
+pnpm install
 ```
 
-If `jq` is not installed, look up the version in `package.json` under
-`devDependencies["@playwright/test"]` and substitute it directly in the image tag
-(e.g. `mcr.microsoft.com/playwright:v1.52.0-jammy`).
-
-> **Note**: the Docker recipe mounts the repo root as `/work`, so pnpm's store ends up at
-> `.pnpm-store/` inside the repo. That directory is gitignored and safe to delete afterwards.
+> **Notes**:
+> - `--ipc=host` prevents Chromium from OOM-crashing in the container (per [Playwright official Docker docs](https://playwright.dev/docs/docker)).
+> - Reading the version via `node -p` is deterministic and dependency-free — no `jq` needed.
+> - `pnpm install --frozen-lockfile` inside Linux replaces host macOS/Windows native binaries; restoring afterward is mandatory.
+> - The Docker recipe mounts the repo root as `/work`, so pnpm's store ends up at `.pnpm-store/` inside the repo. That directory is gitignored and safe to delete afterwards.
 
 After the container finishes, commit the updated
 `tests/e2e/banner.spec.ts-snapshots/reminder-banner-chromium-linux.png`.
+
+### No Docker? CI artifact fallback
+
+If you can't run Docker locally:
+
+1. Push your branch with the banner change.
+2. Let the `e2e` CI job fail on the snapshot mismatch.
+3. Download the `playwright-report` artifact from the failed run.
+4. Find the actual screenshot at `playwright-report/data/<test-id>-actual.png` (or under `test-results/`).
+5. Copy it to `tests/e2e/banner.spec.ts-snapshots/reminder-banner-chromium-linux.png` and commit.
+
+Slower than Docker, but works without local Linux.
 
 ## CI
 
