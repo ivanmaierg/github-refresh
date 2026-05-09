@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Add Playwright E2E and Vitest unit test harnesses.
+
 ### Fixed
 - Reminder banner now renders in GitHub's system font stack. Previously the inline `host.style.all = 'initial'` override took precedence over the `:host { font-family }` rule in `banner.css`, so the host element fell back to the browser's default serif and shadow-tree descendants inherited it.
 

@@ -37,3 +37,12 @@ lerna-debug.log*
 
 # Crxjs
 .crx-build/
+
+# Playwright / test artifacts
+playwright-report/
+test-results/
+playwright/.cache
+
+# OS-specific Playwright snapshots — only *-linux.png is committed (CI canonical)
+tests/e2e/**/*-darwin.png
+tests/e2e/**/*-win32.png
